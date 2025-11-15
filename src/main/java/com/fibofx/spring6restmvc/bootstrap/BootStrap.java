@@ -34,7 +34,7 @@ public class BootStrap implements CommandLineRunner {
     private void loadBeerData() {
         if (beerRepository.count() == 0){
             Beer beer1 = Beer.builder()
-                    .beerName("Galaxy Cat")
+                    .beerName("Galaxy Man")
                     .beerStyle(BeerStyle.PALE_ALE)
                     .upc("12356")
                     .price(new BigDecimal("12.99"))
