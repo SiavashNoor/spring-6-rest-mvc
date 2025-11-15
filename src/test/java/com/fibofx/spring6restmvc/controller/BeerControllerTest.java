@@ -2,7 +2,7 @@ package com.fibofx.spring6restmvc.controller;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fibofx.spring6restmvc.model.Beer;
+import com.fibofx.spring6restmvc.model.BeerDTO;
 import com.fibofx.spring6restmvc.services.BeerService;
 import com.fibofx.spring6restmvc.services.BeerServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +11,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -18,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -28,6 +30,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 
 
 
@@ -53,7 +56,7 @@ class BeerControllerTest {
     @Captor
     ArgumentCaptor<UUID> uuidArgumentCaptor;
     @Captor
-    ArgumentCaptor<Beer> beerArgumentCaptor;
+    ArgumentCaptor<BeerDTO> beerArgumentCaptor;
 
     @BeforeEach
     void setUp(){
@@ -61,9 +64,10 @@ class BeerControllerTest {
     }
 
 
+
     @Test
     void testPatchBeer() throws Exception {
-        Beer beer = beerServiceImpl.listBeers().getFirst();
+        BeerDTO beer = beerServiceImpl.listBeers().getFirst();
 
         Map<String ,Object> beerMap = new HashMap<>();
         beerMap.put("beerName","New Name");
@@ -75,15 +79,12 @@ class BeerControllerTest {
 
         verify(beerService).patchBeerById(uuidArgumentCaptor.capture(),beerArgumentCaptor.capture());
         assertThat(beer.getId()).isEqualTo(uuidArgumentCaptor.getValue());
-
         assertThat((beerMap.get("beerName"))).isEqualTo(beerArgumentCaptor.getValue().getBeerName());
-
-
     }
 
     @Test
     void testDeleteBeer() throws Exception {
-        Beer beer = beerServiceImpl.listBeers().getFirst();
+        BeerDTO beer = beerServiceImpl.listBeers().getFirst();
 
         mockMvc.perform(delete(BeerController.BEER_PATH+"/"+beer.getId())
                 .accept(MediaType.APPLICATION_JSON)
@@ -100,7 +101,7 @@ class BeerControllerTest {
 
     @Test
     void testUpdateBeer() throws Exception {
-        Beer beer = beerServiceImpl.listBeers().getFirst();
+        BeerDTO beer = beerServiceImpl.listBeers().getFirst();
 
 
         mockMvc.perform(put(BeerController.BEER_PATH+"/"+beer.getId())
@@ -109,17 +110,17 @@ class BeerControllerTest {
                 .content(objectMapper.writeValueAsString(beer)))
                 .andExpect(status().isNoContent());
         // Verify the service was called with the correct arguments
-        verify(beerService).updateBeerById(any(UUID.class),any(Beer.class));
+        verify(beerService).updateBeerById(any(UUID.class),any(BeerDTO.class));
     }
 
     @Test
     void testCreateNewBeer() throws Exception {
 
-        Beer beer = beerServiceImpl.listBeers().getFirst();
+        BeerDTO beer = beerServiceImpl.listBeers().getFirst();
        beer.setVersion(null);
        beer.setId(null);
 
-       given(beerService.saveNewBeer(any(Beer.class))).willReturn(beerServiceImpl.listBeers().get(1));
+       given(beerService.saveNewBeer(any(BeerDTO.class))).willReturn(beerServiceImpl.listBeers().get(1));
 
        mockMvc.perform(post(BeerController.BEER_PATH)
                .accept(MediaType.APPLICATION_JSON)
@@ -127,16 +128,26 @@ class BeerControllerTest {
                        .content(objectMapper.writeValueAsString(beer)))
                .andExpect(status().isCreated())
                .andExpect(header().exists("Location"));
-
     }
+
+
+
+    @Test
+    void  getBeerByIdNotFound() throws Exception {
+
+            given(beerService.getBeerById(any(UUID.class))).willReturn(Optional.empty());
+        mockMvc.perform(get(BeerController.BEER_PATH_ID,UUID.randomUUID()))
+                .andExpect(status().isNotFound());
+    }
+
 
     @Test
     void getBeerById() throws Exception {
-       Beer testBeer = beerServiceImpl.listBeers().getFirst();
+       BeerDTO testBeer = beerServiceImpl.listBeers().getFirst();
 
        //is a Mockito stub definition, written in BDD style (Behavior-Driven Development).
         //It tells Mockito how the mock object (beerService) should behave when a specific method is called during the test.
-       given(beerService.getBeerById(testBeer.getId())).willReturn(testBeer);
+       given(beerService.getBeerById(testBeer.getId())).willReturn(Optional.of(testBeer));
         mockMvc.perform(get(BeerController.BEER_PATH+"/"+testBeer.getId())
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -154,7 +165,6 @@ class BeerControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()",is(3)));
-
     }
 
 

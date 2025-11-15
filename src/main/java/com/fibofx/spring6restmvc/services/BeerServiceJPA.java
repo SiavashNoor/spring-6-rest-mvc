@@ -1,0 +1,74 @@
+package com.fibofx.spring6restmvc.services;
+
+import com.fibofx.spring6restmvc.mappers.BeerMapper;
+import com.fibofx.spring6restmvc.model.BeerDTO;
+import com.fibofx.spring6restmvc.repositories.BeerRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+
+@Service
+@Primary
+@RequiredArgsConstructor
+public class BeerServiceJPA implements BeerService {
+
+    private final BeerRepository beerRepository;
+    private final BeerMapper beerMapper;
+
+
+
+    @Override
+    public Optional<BeerDTO> getBeerById(UUID id) {
+        return Optional.ofNullable(beerMapper.beerToBeerDto(beerRepository.findById(id)
+                .orElse(null)));
+    }
+
+
+    /**
+     * beerRepository.findAll()
+     * Calls the repository to get all Beer entities from the database.
+     * The result is typically a List<Beer>.
+     * .stream()
+     * Turns the list into a stream so you can process each item one by one using functional operations (map, filter, etc.).
+     * .map(beerMapper::beerToBeerDto)
+     * For each Beer entity in the stream, convert it to a BeerDTO using the beerMapper.
+     * beerMapper::beerToBeerDto is a method reference, basically shorthand for:
+     */
+    @Override
+    public List<BeerDTO> listBeers() {
+        return beerRepository.findAll()
+                .stream()
+                .map(beerMapper::beerToBeerDto)
+                .collect(Collectors.toList());
+
+
+    }
+
+
+
+    @Override
+    public BeerDTO saveNewBeer(BeerDTO beer) {
+        return null;
+    }
+
+    @Override
+    public void updateBeerById(UUID beerId, BeerDTO beer) {
+
+    }
+
+    @Override
+    public void deleteById(UUID beerId) {
+
+    }
+
+    @Override
+    public void patchBeerById(UUID beerId, BeerDTO beer) {
+
+    }
+}
