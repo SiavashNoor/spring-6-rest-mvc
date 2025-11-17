@@ -1,5 +1,6 @@
 package com.fibofx.spring6restmvc.services;
 
+import com.fibofx.spring6restmvc.entities.Customer;
 import com.fibofx.spring6restmvc.mappers.CustomerMapper;
 import com.fibofx.spring6restmvc.model.CustomerDTO;
 import com.fibofx.spring6restmvc.repositories.CustomerRepository;
@@ -35,22 +36,35 @@ public class CustomerServiceJPA implements CustomerService {
     }
 
     @Override
-    public void deleteById(UUID beerId) {
-
+    public boolean deleteById(UUID customerId) {
+            if(customerRepository.existsById(customerId)){
+                customerRepository.deleteById(customerId);
+                return true;
+            }
+            return false;
     }
 
     @Override
     public CustomerDTO saveNewCustomer(CustomerDTO customer) {
-        return null;
+
+        return customerMapper.customerToCustomerDto(customerRepository.save(customerMapper.customerDtoToCustomer(customer)));
     }
 
     @Override
-    public void updateCustomerById(UUID customerId, CustomerDTO customer) {
+    public Optional<CustomerDTO> updateCustomerById(UUID customerId, CustomerDTO customer) {
+        return customerRepository.findById(customerId)
+                .map(existingCustomer ->updateAndSave(existingCustomer,customer))
+                .map(customerMapper::customerToCustomerDto);
+    }
 
+    private Customer updateAndSave(Customer existingCustomer, CustomerDTO customer) {
+    existingCustomer.setName(customer.getName());
+    return customerRepository.save(existingCustomer);
     }
 
     @Override
-    public void patchCustomerById(UUID id, CustomerDTO customer) {
+    public Optional<CustomerDTO> patchCustomerById(UUID id, CustomerDTO customer) {
 
+        return Optional.empty();
     }
 }

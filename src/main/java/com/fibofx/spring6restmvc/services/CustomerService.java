@@ -15,11 +15,13 @@ public interface CustomerService {
     public Optional<CustomerDTO> getCustomerById(UUID id);
 
 
-    public void deleteById(UUID beerId);
+    public boolean deleteById(UUID customerId);
 
     public CustomerDTO saveNewCustomer(CustomerDTO customer);
 
-    public void updateCustomerById(UUID customerId, CustomerDTO customer);
+    public Optional<CustomerDTO> updateCustomerById(UUID customerId, CustomerDTO customer);
 
-    public void patchCustomerById(UUID id, CustomerDTO customer);
+    public Optional<CustomerDTO> patchCustomerById(UUID id, CustomerDTO customer);
+
+
 }

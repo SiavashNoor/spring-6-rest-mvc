@@ -1,6 +1,7 @@
 package com.fibofx.spring6restmvc.controller;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.fibofx.spring6restmvc.model.CustomerDTO;
@@ -15,6 +16,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.*;
 
@@ -79,6 +81,23 @@ public class CustomerControllerTest {
     }
 
 
+    //test validation for customer dto
+    @Test
+    void testCreateNewCustomerWithNullData() throws Exception {
+
+
+        CustomerDTO customerDTO = CustomerDTO.builder()
+                .build();
+
+        given(customerService.saveNewCustomer(any(CustomerDTO.class))).willReturn(customerServiceImpl.getAllCustomers().get(1));
+       MvcResult r =  mockMvc.perform(post(CustomerController.CUSTOMER_PATH)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(customerDTO)))
+                .andExpect(status().isBadRequest())
+               .andReturn();
+        System.out.println(r.getResponse().getContentAsString());
+    }
 
     @Test
     void testCreateNewCustomer() throws Exception {
@@ -117,6 +136,7 @@ public class CustomerControllerTest {
     void deleteByIdTest() throws Exception {
         CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
 
+        given(customerService.deleteById(any())).willReturn(true);
         mockMvc.perform(delete(CustomerController.CUSTOMER_PATH+"/"+customer.getId().toString())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
@@ -136,10 +156,12 @@ public class CustomerControllerTest {
         @Test
         void testUpdateNewCustomer() throws Exception {
         CustomerDTO customer = customerServiceImpl.getAllCustomers().getFirst();
+         given(customerService.updateCustomerById(any(),any())).willReturn(Optional.of(customer));
         mockMvc.perform(put(CustomerController.CUSTOMER_PATH+"/"+customer.getId().toString()).accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(customer)))
                 .andExpect(status().isNoContent());
+
 
         //This verifies that the mocked customerService was called exactly once with the expected parameters.
             //uuidArgumentCaptor and customerArgumentCaptor are Mockito ArgumentCaptors, which capture the arguments passed to the method for later inspection.
